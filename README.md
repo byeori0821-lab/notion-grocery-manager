@@ -4,17 +4,19 @@
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white)
 ![Notion API](https://img.shields.io/badge/Notion-API-000?logo=notion&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude-AI_Powered-orange?logo=anthropic&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Platform](https://img.shields.io/badge/Platform-macOS%20%7C%20Android%20%7C%20iOS-lightgrey)
 
 > **Upload a receipt. Everything else is automatic.**
 
 ```
-📸 Receipt photo → 🤖 Auto-parse → 📦 Categorized inventory
-                                   → 📊 Spending analysis
-                                   → ⏰ Expiration alerts
-                                   → 💊 Medicine tracking
-                                   → 🔔 Cross-platform reminders
+📸 Receipt photo/PDF ──▶ Claude (AI parse) ──▶ Notion Inventory
+                                                ├── 📦 Auto-categorized items
+                                                ├── 📊 Spending analysis
+                                                ├── ⏰ Expiration alerts
+                                                ├── 💊 Medicine tracking
+                                                └── 🔔 Cross-platform reminders
 ```
 
 ---
@@ -23,15 +25,15 @@
 
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  PDF Receipt │────▶│  receipt_parser   │────▶│   Notion API    │
-│  盒马/小象/山姆 │     │  auto-classify    │     │  ┣ Inventory DB │
+│  PDF Receipt │────▶│  Claude AI       │────▶│   Notion API    │
+│  (photo/PDF) │     │  + receipt_parser │     │  ┣ Inventory DB │
 └─────────────┘     └──────────────────┘     │  ┣ Shopping DB  │
                                               │  ┗ Purchase DB  │
 ┌─────────────┐     ┌──────────────────┐     └────────┬────────┘
 │  Daily Cron  │────▶│ inventory_check   │             │
-│  (scheduled) │     │ medicine_tracker  │◀────────────┘
-└─────────────┘     └──────┬───────────┘
-                           │
+│  (Claude     │     │ medicine_tracker  │◀────────────┘
+│   Scheduled) │     └──────┬───────────┘
+└─────────────┘            │
               ┌────────────┼────────────┐
               ▼            ▼            ▼
      ┌──────────────┐ ┌────────┐ ┌──────────────┐
@@ -59,51 +61,126 @@ src/
 
 ### The Problem
 
-You buy groceries worth ¥500. Three days later you can't remember what's in your fridge. Vegetables rot. You buy duplicates. Medicine runs out because you forgot to refill. Sound familiar?
+You buy groceries worth ¥500. Three days later you can't remember what's in your fridge. Vegetables rot. You buy duplicates. Medicine runs out because you forgot to refill.
 
 Traditional inventory apps fail because they demand **manual input for every item** — nobody keeps that up.
 
-### The Solution
+### How It Works
 
-**Upload a receipt screenshot. That's it.** This system does the rest:
+This system is powered by **[Claude](https://claude.ai) + Notion API**. Claude acts as the AI brain that parses your receipts and manages your inventory. Here's the actual workflow:
 
-- **Auto-parse & categorize** — PDF invoices from Hema (盒马), Xiaoxiang (小象超市), Sam's Club get parsed and sorted into 10+ categories with emoji icons
-- **Expiration intelligence** — knows that cut fruit lasts 1 day, bread lasts 5 days, frozen food lasts months. Updates status automatically every day
-- **Smart restock flow** — "used up" ≠ "buy again". Items only enter the shopping list when you explicitly mark them for restock. Prevents impulse repurchasing
-- **Medicine tracking** — calculates remaining doses daily, alerts 7 days before you run out. Medications cannot be allowed to lapse
-- **Spending analysis** — category breakdown, store comparison, monthly trends. All rendered in Notion with text-based charts (no paid plan needed)
-- **Nutrition nudges** — flags when your produce ratio drops too low, or when you haven't bought vitamin C-rich fruit in 2 weeks
-- **Cross-platform alerts** — macOS Reminders (AppleScript), Google Calendar (syncs to Android/iOS), push notifications
+#### 📸 Step 1: Upload a Receipt
 
-### Design Principles
+Send a receipt photo or PDF to Claude (via Claude Desktop App, Claude Code, or claude.ai):
 
-This isn't just an inventory tracker — it's designed for people who've tried every productivity app and quit them all:
+```
+You:  [attach receipt.pdf]
+      "这是今天盒马的小票，帮我录入"
 
-| Principle | Implementation |
-|---|---|
-| **Zero manual entry** | Receipt upload → everything auto-populates |
-| **No guilt** | "Used up" is archived, not added to buy-again. You choose what to restock |
-| **Visual-first** | Every item has a category emoji. Color-coded statuses at a glance |
-| **Low friction** | Change status with a single click. No forms, no fields to fill |
-| **Gentle tone** | Casual reminders, not productivity guilt trips |
-| **Works offline** | Notion mobile app works at the supermarket |
+Claude: ✓ Parsed 31 items from 盒马
+        ✓ Auto-categorized into 8 categories
+        ✓ Added to Notion inventory
+```
 
-### Quick Start
+That's it. No forms. No manual entry. Just send the receipt.
+
+#### ⏰ Step 2: Daily Auto-Check (Runs by Itself)
+
+A scheduled routine runs every morning and automatically:
+- Checks what's expiring → updates status (✅ → 📌 → ⚠️)
+- Calculates medicine remaining doses
+- Moves "needs restock" items to shopping list
+- Updates spending analysis & nutrition reminders
+- Sends push notifications + macOS Reminders
+
+#### 🛒 Step 3: Go Shopping
+
+Open Notion on your phone → check the shopping list → done.
+
+### Setup Guide (15 minutes)
+
+#### Prerequisites
+- A [Notion](https://notion.so) account (free plan works)
+- [Claude](https://claude.ai) account with Claude Code or Claude Desktop App
+- Python 3.9+ (pre-installed on macOS)
+
+#### 1. Set Up Notion
+
+1. Go to [notion.so/my-integrations](https://www.notion.so/my-integrations)
+2. Click **+ New integration** → name it `Grocery Manager` → Submit
+3. Copy the **Internal Integration Secret** (starts with `ntn_`)
+4. Create a new page in Notion → share it with your integration (click `···` → Connections → add your integration)
+
+#### 2. Clone This Repo
 
 ```bash
 git clone https://github.com/byeori0821-lab/notion-grocery-manager.git
 cd notion-grocery-manager
 cp .env.example .env
-# Fill in your Notion API token and database IDs in .env
-export $(cat .env | xargs)
-cd src && python3 inventory_check.py
 ```
 
-### Requirements
+#### 3. Configure
 
-- Python 3.9+ (stdlib only — zero pip dependencies)
-- A [Notion integration](https://www.notion.so/my-integrations) with read/write access
-- macOS (for Reminders integration; optional)
+Edit `.env` with your Notion credentials:
+```
+NOTION_TOKEN=ntn_your_token_here
+INVENTORY_DB=your_inventory_database_id
+SHOPPING_DB=your_shopping_list_database_id
+PURCHASE_DB=your_purchase_history_database_id
+GROCERY_PAGE=your_grocery_page_id
+```
+
+> **How to find Database IDs:** Open the database in Notion as a full page → the URL looks like `notion.so/abc123def456...` → that `abc123def456` part is the ID.
+
+#### 4. Initialize Databases
+
+```bash
+export $(cat .env | xargs)
+cd src
+python3 -c "
+from notion_client import api
+# This creates the required database structure in your Notion page
+print('Setting up databases...')
+# See docs/setup.md for full initialization script
+"
+```
+
+#### 5. Set Up Daily Routine (Optional)
+
+If using Claude Code, place the routine config in:
+```
+~/.claude/scheduled-tasks/grocery-inventory-check/SKILL.md
+```
+See [SKILL.md template](docs/SKILL_TEMPLATE.md) in this repo.
+
+#### 6. Start Using
+
+Send any grocery receipt to Claude with:
+> "이거 장보기 영수증이야, 재고에 넣어줘" / "这是今天的小票，帮我录入库存"
+
+Done. Everything flows from there.
+
+### Features
+
+| Feature | How |
+|---|---|
+| **Receipt parsing** | Send PDF/photo to Claude → auto-categorized into Notion |
+| **Expiration tracking** | Daily auto-check: cut fruit 1d, bread 5d, frozen 30d+ |
+| **Smart restock** | "Used up" ≠ auto-rebuy. Only "needs restock" enters shopping list |
+| **Medicine tracking** | Daily dose calc, 7-day advance alert, can't run out |
+| **Spending analysis** | Category breakdown, store comparison (text charts, no paid plan) |
+| **Nutrition nudges** | Low produce ratio alert, vitamin C fruit reminder |
+| **Notifications** | macOS Reminders + Google Calendar + Claude push |
+
+### Design Philosophy
+
+Built for people who've tried every productivity app and quit them all:
+
+- **Zero manual entry** — send a receipt, done
+- **No guilt** — "used up" just archives. You decide what to rebuy
+- **Visual-first** — emoji icons, color-coded statuses
+- **One-tap actions** — change status with a single click
+- **Gentle tone** — like a friend reminding you, not a productivity coach
 
 ---
 
@@ -116,44 +193,101 @@ cd src && python3 inventory_check.py
 
 传统库存App全都要**手动录入每一件商品**——没人能坚持。
 
-### 解决方案
+### 它是怎么工作的
 
-**上传一张小票截图，剩下的全自动。**
+这套系统由 **[Claude](https://claude.ai)（AI助手）+ Notion API** 驱动。Claude 负责解析小票、管理库存，你只需要动动手指。
 
-- **发票自动解析** — 盒马/小象超市/山姆的PDF发票，自动识别商品、分类、加emoji图标入库
-- **保质期智能判断** — 鲜切水果1天、面包5天、冷冻食品按月。每天自动更新状态：✅充足 → 📌这周吃掉 → ⚠️赶紧吃
-- **防冲动补货** — 标了"用完了"不会自动进购物清单。只有你主动标"需要补货"的才会进。省得逛超市管不住手
-- **药品追踪** — 每天计算剩余量，**提前7天**提醒你去医院开处方。药不能断
-- **消费分析** — 分类占比、分店对比、月度趋势，全在Notion里用文字进度条展示（不需要付费版）
-- **营养提醒** — 速食占比过高会提醒、两周没买维C水果会提醒
-- **跨平台通知** — macOS提醒事项 + Google日历（安卓/iOS同步） + 推送通知
+#### 📸 第1步：上传小票
 
-### 设计理念
+把小票拍照或PDF发给 Claude（通过 Claude 桌面端、Claude Code 或 claude.ai 网页版）：
 
-这不只是一个库存管理工具——是为"试过所有效率App最后全放弃了"的人设计的：
+```
+你：  [附上 receipt.pdf]
+     "这是今天盒马的小票，帮我录入"
 
-- **零手动录入** — 拍小票就行，别的不用管
-- **没有负罪感** — "吃完了"只是归档，不会催你回购。想买才买
-- **视觉优先** — 每件商品有分类emoji，状态一眼看清
-- **最低操作成本** — 改个状态点一下就行，没有表单要填
-- **说人话** — 不写"坚持就是胜利"这种东西，像朋友提醒你一样
+Claude: ✓ 解析了31件商品
+        ✓ 自动分成8个类别
+        ✓ 已录入 Notion 库存
+```
 
-### 快速开始
+不用填表、不用手动输入，发小票就行。
+
+#### ⏰ 第2步：每日自动巡检（自己跑）
+
+每天早上自动执行：
+- 检查快过期的 → 更新状态（✅充足 → 📌这周吃 → ⚠️赶紧吃）
+- 计算药品剩余天数
+- 把标了"需要补货"的自动搬进购物清单
+- 更新消费分析和营养提醒
+- 发推送通知 + macOS提醒
+
+#### 🛒 第3步：去超市
+
+手机打开 Notion → 看购物清单 → 搞定。
+
+### 安装教程（15分钟）
+
+#### 你需要准备
+- [Notion](https://notion.so) 账号（免费版就行）
+- [Claude](https://claude.ai) 账号（需要 Claude Code 或 Claude 桌面端）
+- Python 3.9+（macOS 自带）
+
+#### 1. 配置 Notion
+
+1. 打开 [notion.so/my-integrations](https://www.notion.so/my-integrations)
+2. 点 **+ 新建集成** → 名字写 `Grocery Manager` → 提交
+3. 复制 **Internal Integration Secret**（以 `ntn_` 开头的那串）
+4. 在 Notion 新建一个页面 → 把集成连接上去（点 `···` → 连接 → 添加你的集成）
+
+#### 2. 下载代码
 
 ```bash
 git clone https://github.com/byeori0821-lab/notion-grocery-manager.git
 cd notion-grocery-manager
 cp .env.example .env
-# 在 .env 里填入你的 Notion API Token 和数据库ID
-export $(cat .env | xargs)
-cd src && python3 inventory_check.py
 ```
 
-### 环境要求
+#### 3. 填入配置
 
-- Python 3.9+（纯标准库，不需要pip安装任何依赖）
-- [Notion Integration](https://www.notion.so/my-integrations)（需要读写权限）
-- macOS（提醒事项联动用，可选）
+编辑 `.env` 文件，填入你的 Notion 信息：
+```
+NOTION_TOKEN=ntn_你的token
+INVENTORY_DB=库存数据库ID
+SHOPPING_DB=购物清单数据库ID
+PURCHASE_DB=采购记录数据库ID
+GROCERY_PAGE=买菜页面ID
+```
+
+> **怎么找数据库ID：** 在 Notion 里把数据库全屏打开 → 看浏览器地址栏 `notion.so/abc123def456...` → 那串 `abc123def456` 就是ID。
+
+#### 4. 开始使用
+
+把任何一张超市小票发给 Claude：
+> "这是今天盒马的小票，帮我录入库存"
+
+完事。后面全自动。
+
+### 功能清单
+
+| 功能 | 说明 |
+|---|---|
+| **小票自动解析** | 发PDF/照片给Claude → 自动分类入Notion |
+| **保质期追踪** | 每天自动检查：果切1天、面包5天、冷冻30天+ |
+| **防冲动补货** | "吃完了"只归档，不自动回购。标"要补"才进清单 |
+| **药品追踪** | 每天算剩余量，提前7天提醒去开处方 |
+| **消费分析** | 分类/分店对比，文字进度条（不需付费版） |
+| **营养提醒** | 速食占比过高、维C水果太久没买都会提醒 |
+| **跨平台通知** | macOS提醒事项 + Google日历 + Claude推送 |
+
+### 设计理念
+
+为"试过所有效率App最后全放弃了"的人设计：
+
+- **零手动录入** — 拍小票就行
+- **没有负罪感** — "吃完了"不催你回购，想买才买
+- **视觉优先** — 每件商品有emoji、状态有颜色
+- **一步操作** — 改状态点一下，没有表单
+- **说人话** — 不写"坚持就是胜利"
 
 ---
 
@@ -164,48 +298,113 @@ cd src && python3 inventory_check.py
 
 허마에서 500위안어치 장을 봤는데, 3일 후 냉장고에 뭐가 있는지 기억이 안 남. 채소는 썩고, 같은 거 또 사고, 약은 다 먹고 나서야 알아챔.
 
-기존 재고 관리 앱은 전부 **하나하나 수동 입력**해야 하니까 아무도 안 함.
+기존 재고 관리 앱은 전부 **하나하나 수동 입력**해야 해서 아무도 안 씀.
 
-### 해결
+### 어떻게 작동하나
 
-**영수증 캡처 한 장 올리면 끝. 나머지는 전부 자동.**
+**[Claude](https://claude.ai) (AI 어시스턴트) + Notion API** 로 돌아감. Claude가 영수증 읽고 재고 관리해줌. 너는 사진 보내기만 하면 됨.
 
-- **영수증 자동 파싱** — 허마/샤오샹/샘스클럽 PDF 영수증 → 자동 분류 + 이모지 아이콘 배정
-- **유통기한 자동 판단** — 과일컷 1일, 빵 5일, 냉동식품 한 달. 매일 상태 자동 업데이트: ✅여유 → 📌이번 주에 먹자 → ⚠️빨리 먹어!
-- **충동구매 방지** — "다 씀"으로 바꿔도 자동으로 장바구니에 안 들어감. "보충필요"로 표시한 것만 들어감
-- **약 재고 추적** — 매일 남은 양 자동 계산, **7일 전에** 병원 가서 처방받으라고 알림. 약은 절대 끊기면 안 됨
-- **소비 분석** — 카테고리별 비율, 매장별 비교, 월별 추이. Notion에서 텍스트 차트로 표시 (유료 플랜 불필요)
-- **영양 리마인더** — 즉석식품 비율 너무 높으면 알림, 비타민C 과일 2주 이상 안 샀으면 알림
-- **크로스 플랫폼 알림** — macOS 미리알림 + Google 캘린더(안드로이드/iOS 동기화) + 푸시 알림
+#### 📸 1단계: 영수증 보내기
 
-### 설계 철학
+영수증 사진이나 PDF를 Claude한테 보냄 (Claude 데스크톱 앱, Claude Code, 또는 claude.ai):
 
-생산성 앱 다 깔아보고 다 포기한 사람을 위해 만듦:
+```
+나:    [receipt.pdf 첨부]
+      "오늘 허마 영수증이야, 재고에 넣어줘"
 
-- **수동 입력 제로** — 영수증만 찍으면 됨
-- **죄책감 없음** — "다 씀" = 그냥 정리됨. 다시 살지 말지는 네가 정해
-- **시각 우선** — 모든 상품에 카테고리 이모지, 상태 색상 구분
-- **최소 조작** — 상태 바꾸기 원클릭. 작성할 양식 없음
-- **자연스러운 말투** — "화이팅!" 이런 거 안 씀. 친구가 알려주는 느낌
+Claude: ✓ 31개 상품 파싱 완료
+        ✓ 8개 카테고리로 자동 분류
+        ✓ Notion 재고에 추가됨
+```
 
-### 시작하기
+양식 작성 없음. 수동 입력 없음. 영수증만 보내면 끝.
+
+#### ⏰ 2단계: 매일 자동 체크 (알아서 돌아감)
+
+매일 아침 자동으로:
+- 유통기한 체크 → 상태 업데이트 (✅ → 📌 → ⚠️)
+- 약 남은 양 계산
+- "보충필요" 표시한 거 → 장바구니로 이동
+- 소비 분석 & 영양 리마인더 업데이트
+- 푸시 알림 + macOS 미리알림
+
+#### 🛒 3단계: 장보러 가기
+
+폰에서 Notion 열고 → 장바구니 확인 → 끝.
+
+### 설치 가이드 (15분)
+
+#### 준비물
+- [Notion](https://notion.so) 계정 (무료 플랜 OK)
+- [Claude](https://claude.ai) 계정 (Claude Code 또는 Claude 데스크톱 앱)
+- Python 3.9+ (macOS에 기본 설치됨)
+
+#### 1. Notion 설정
+
+1. [notion.so/my-integrations](https://www.notion.so/my-integrations) 열기
+2. **+ New integration** → 이름: `Grocery Manager` → 제출
+3. **Internal Integration Secret** 복사 (`ntn_`으로 시작하는 거)
+4. Notion에서 새 페이지 만들기 → 인테그레이션 연결 (`···` → 연결 → 추가)
+
+#### 2. 코드 다운로드
 
 ```bash
 git clone https://github.com/byeori0821-lab/notion-grocery-manager.git
 cd notion-grocery-manager
 cp .env.example .env
-# .env에 Notion API 토큰과 데이터베이스 ID 입력
-export $(cat .env | xargs)
-cd src && python3 inventory_check.py
 ```
 
-### 요구사항
+#### 3. 설정
 
-- Python 3.9+ (표준 라이브러리만 사용, pip 설치 필요 없음)
-- [Notion Integration](https://www.notion.so/my-integrations) (읽기/쓰기 권한)
-- macOS (미리알림 연동용, 선택사항)
+`.env` 파일에 Notion 정보 입력:
+```
+NOTION_TOKEN=ntn_너의토큰
+INVENTORY_DB=재고DB아이디
+SHOPPING_DB=장바구니DB아이디
+PURCHASE_DB=구매기록DB아이디
+GROCERY_PAGE=장보기페이지아이디
+```
+
+> **데이터베이스 ID 찾는 법:** Notion에서 DB를 전체 페이지로 열기 → 주소창에서 `notion.so/abc123def456...` → 그 `abc123def456` 부분이 ID.
+
+#### 4. 사용 시작
+
+아무 영수증이나 Claude한테 보내기:
+> "이거 오늘 장본 영수증이야, 재고에 넣어줘"
+
+끝. 나머지는 다 자동.
+
+### 기능
+
+| 기능 | 설명 |
+|---|---|
+| **영수증 자동 파싱** | PDF/사진을 Claude한테 보내면 → Notion에 자동 분류 입력 |
+| **유통기한 추적** | 매일 자동 체크: 과일컷 1일, 빵 5일, 냉동 30일+ |
+| **충동구매 방지** | "다 씀" = 그냥 정리됨. "보충필요"만 장바구니에 들어감 |
+| **약 재고 추적** | 매일 남은 양 계산, 7일 전에 병원 가라고 알림 |
+| **소비 분석** | 카테고리/매장별 비교, 텍스트 차트 (유료 플랜 불필요) |
+| **영양 리마인더** | 즉석식품 비율 높으면 알림, 비타민C 과일 오래 안 샀으면 알림 |
+| **크로스 플랫폼 알림** | macOS 미리알림 + Google 캘린더 + Claude 푸시 |
+
+### 설계 철학
+
+생산성 앱 다 깔아보고 다 포기한 사람을 위해 만듦:
+
+- **수동 입력 제로** — 영수증만 보내면 됨
+- **죄책감 없음** — "다 씀" = 정리됨. 다시 살지는 네가 정해
+- **시각 우선** — 이모지 아이콘, 색상별 상태 구분
+- **원클릭** — 상태 바꾸기 한 번 클릭
+- **자연스러운 말투** — "화이팅!" 안 씀. 친구가 알려주는 느낌
 
 ---
+
+## 🛠 Tech Stack
+
+- **Python 3.9+** — stdlib only, zero pip dependencies
+- **Notion API** (2022-06-28) — database CRUD, block management
+- **Claude AI** — receipt parsing, scheduled routines, push notifications
+- **AppleScript** — macOS Reminders integration
+- **Google Calendar URL Scheme** — cross-platform calendar events
 
 ## 📄 License
 
